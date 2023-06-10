@@ -2,7 +2,6 @@
 
 INTERFACE lif_visitor DEFERRED.
 
-*---Creating Two interfaces for Handshaking between visiror and visitible (client) 
 INTERFACE lif_visitible.
   TYPES:BEGIN OF ty_info,
           model TYPE string,
@@ -18,7 +17,6 @@ INTERFACE lif_visitor.
                 RETURNING VALUE(r_price) TYPE kbetr.
 ENDINTERFACE.
 
-*---Visitor needs to implement the right interface
 CLASS lcl_visitor DEFINITION.
   PUBLIC SECTION.
     INTERFACES lif_visitor.
@@ -27,30 +25,28 @@ ENDCLASS.
 
 CLASS lcl_visitor IMPLEMENTATION.
 
-*---This is the Visitor Task
   METHOD service.
 
     DATA(ls_info) = im_client->provide_info( ).
 
     IF ls_info-model = 'Whirlpool'
-    AND ( sy-datum+4 - ls_info-year ) LT 1.
+    AND ( sy-datum+0(4) - ls_info-year ) LT 1.
 
       r_price = 0.
 
     ELSEIF ls_info-model = 'Whirlpool'
-        AND ( sy-datum - ls_info-year ) GT 1
+        AND ( sy-datum+0(4) - ls_info-year ) GT 1
         AND ls_info-size LT 300.
       r_price = 450.
 
     ELSEIF ls_info-model = 'Whirlpool'
-        AND ( sy-datum - ls_info-year ) GT 1
+        AND ( sy-datum+0(4) - ls_info-year ) GT 1
         AND ls_info-size GT 300.
       r_price = 550.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
 
-*---Client also needs to implement the client interface
 CLASS lcl_client DEFINITION.
 
   PUBLIC SECTION.
@@ -72,26 +68,22 @@ ENDCLASS.
 
 CLASS lcl_client IMPLEMENTATION.
 
-*--Setting the required details during construction
   METHOD constructor.
     l_model = im_model.
     l_year = im_year.
     l_size = im_size.
   ENDMETHOD.
 
-*---Client is making the data handy for the visitor
   METHOD refz_info.
     ls_info-model = me->l_model.
     ls_info-year = me->l_year.
     ls_info-size = me->l_size.
   ENDMETHOD.
 
-*---Client is accpeting the visitor to perform certain Tasks
   METHOD allow.
     l_price = im_visitor->visit( me ).
   ENDMETHOD.
 
-*---When client wants to know the cost 
   METHOD get_price.
     r_price = |Model:{ me->l_model }, Size:{ me->l_size ALPHA = OUT }, Year: { l_year } ==> Service Charge:{ me->l_price }|.
   ENDMETHOD.
@@ -99,13 +91,9 @@ ENDCLASS.
 
 START-OF-SELECTION.
 
-*---Setting up the client Object.
-  DATA(lo_client) =  NEW lcl_client( im_model = 'Whirlpool' im_size = 375 im_year = '2023' ).
-
-*---Client asks the visitor to perform certain action  
+  DATA(lo_client) =  NEW lcl_client( im_model = 'Whirlpool' im_size = 275 im_year = '2016' ).
   lo_client->allow( NEW lcl_visitor( ) ).
 
-*---Client wants to know the cost / quotation 
   cl_demo_output=>display(
          lo_client->get_price( )
   ).
