@@ -7,8 +7,8 @@ INTERFACE lif_Client.
   TYPES:BEGIN OF ty_info,
           model 	TYPE string,
           p_date  	TYPE dats,
-          capacity  TYPE num4,
-		  issue 	TYPE string,
+          capacity  	TYPE num4,
+	  issue 	TYPE string,
         END OF ty_info.
   METHODS:allow IMPORTING im_visitor TYPE REF TO lif_visitor,
     provide_info RETURNING VALUE(ls_info) TYPE ty_info.
