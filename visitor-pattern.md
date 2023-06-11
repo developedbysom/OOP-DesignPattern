@@ -3,19 +3,19 @@
 
 INTERFACE lif_visitor DEFERRED.
 
-INTERFACE lif_visitible.
+INTERFACE lif_Client.
   TYPES:BEGIN OF ty_info,
           model 	TYPE string,
           p_date  	TYPE dats,
-          capacity  	TYPE num4,
-	  issue 	TYPE string,
+          capacity  TYPE num4,
+		  issue 	TYPE string,
         END OF ty_info.
   METHODS:allow IMPORTING im_visitor TYPE REF TO lif_visitor,
     provide_info RETURNING VALUE(ls_info) TYPE ty_info.
 ENDINTERFACE.
 
 INTERFACE lif_visitor.
-  METHODS:visit IMPORTING im_client      TYPE REF TO lif_visitible
+  METHODS:visit IMPORTING im_client      TYPE REF TO lif_Client
                 RETURNING VALUE(r_price) TYPE kbetr.
 ENDINTERFACE.
 
@@ -37,12 +37,12 @@ CLASS lcl_visitor IMPLEMENTATION.
       r_price = 0.
 
     ELSEIF ls_info-model = 'Whirlpool'
-        AND ( sy-datum - ls_info-p_date ) GT 365
+        AND ABS( sy-datum - ls_info-p_date ) GT 365
         AND ls_info-capacity LT 300.
       r_price = 450.
 
     ELSEIF ls_info-model = 'Whirlpool'
-        AND ( sy-datum- ls_info-p_date ) GT 365
+        AND ABS( sy-datum- ls_info-p_date ) GT 365
         AND ls_info-capacity GT 300.
       r_price = 550.
     ENDIF.
@@ -52,9 +52,9 @@ ENDCLASS.
 CLASS lcl_client DEFINITION.
 
   PUBLIC SECTION.
-    INTERFACES lif_visitible.
-    ALIASES: my_info FOR lif_visitible~provide_info,
-             allow FOR lif_visitible~allow.
+    INTERFACES lif_Client.
+    ALIASES: my_info FOR lif_Client~provide_info,
+             allow FOR lif_Client~allow.
 
     METHODS:constructor IMPORTING 
 				  im_model 	TYPE string
@@ -100,12 +100,13 @@ ENDCLASS.
 START-OF-SELECTION.
 
   DATA(lo_client) =  NEW lcl_client( im_model = 'Whirlpool' im_capacity = 275 
-									 im_p_date = '01012016' im_issue = `Cooling Problem`).
+				    im_p_date = '01012016' im_issue = `Cooling Problem`).
   lo_client->allow( NEW lcl_visitor( ) ).
 
   cl_demo_output=>display(
          lo_client->get_price( )
   ).
+  
   
   ```
 
